@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c7fe6f09-dadf-46c3-96d8-3bd247e4a12d" name="Changes" comment="Estructura de proyecto">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/impl/MyShortestPathProblem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/impl/MyShortestPathProblem.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -49,6 +49,9 @@
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "staging",
     "last_opened_file_path": "/Users/bastianibanez/sem1_2025/fundamentos_alto_rendimiento/taller-7-repo/taller7-fundamentos",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
     "settings.editor.selected.configurable": "preferences.general"
   }
 }]]></component>

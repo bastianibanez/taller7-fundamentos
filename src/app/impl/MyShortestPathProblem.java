@@ -27,12 +27,16 @@ public class MyShortestPathProblem implements ShortestPathProblem {
 
     @Override
     public boolean isSolution(){
-        return path.get(path.size() - 1) == end;
+        return path.getLast() == end;
     }
 
     @Override
     public void applyMove(int move){
-        int from = path.get(path.size() - 1);
+        if (path.isEmpty()){
+            return;
+        }
+
+        int from = path.getLast();
         currentLength += graph[from][move];
         path.add(move);
         visited.add(move);
@@ -40,15 +44,20 @@ public class MyShortestPathProblem implements ShortestPathProblem {
 
     @Override
     public void undoMove(int move){
-        path.remove(path.size() - 1);
-        visited.remove(move);
-        int from = path.get(path.size() - 1);
-        currentLength -= graph[from][move];
+        if (path.size() <= 1){
+            return;
+        }
+
+        int to = path.getLast();
+        path.removeLast();
+        visited.remove(to);
+        int from = path.getLast();
+        currentLength -= graph[from][to];
     }
 
     @Override
     public List<Integer> getPossibleMoves(){
-        int from = path.get(path.size() - 1);
+        int from = path.getLast();
         List<Integer> moves = new ArrayList<>();
 
         for (int to = 0; to < graph.length; to++){
