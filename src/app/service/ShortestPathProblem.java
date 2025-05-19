@@ -12,5 +12,7 @@ public interface ShortestPathProblem {
     List<Integer> getCurrentPath();
     int getCurrentPathLength();
     MyShortestPathProblem copy();
+
+    void run();
 }
 
