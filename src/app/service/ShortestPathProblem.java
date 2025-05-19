@@ -8,5 +8,6 @@ public interface ShortestPathProblem {
     void undoMove(int move);
     List<Integer> getPossibleMoves();
     List<Integer> getCurrentPath();
+    int getCurrentPathLength();
 }
 
