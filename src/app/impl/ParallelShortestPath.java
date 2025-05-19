@@ -2,13 +2,12 @@ package app.impl;
 
 import app.service.ShortestPathProblem;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.RecursiveTask;
 
 public class ParallelShortestPath extends RecursiveTask<List<Integer>> {
-    private ShortestPathProblem problem;
+    private final ShortestPathProblem problem;
     private int bestPathLength;
 
     public ParallelShortestPath(ShortestPathProblem problem, int bestPathLength){
@@ -49,6 +48,4 @@ public class ParallelShortestPath extends RecursiveTask<List<Integer>> {
         }
         return shortestPath;
     }
-
-
 }
