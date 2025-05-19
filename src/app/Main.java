@@ -1,7 +1,9 @@
 package app;
 
-import app.impl.MyShortestPathProblem;
 import app.impl.ParallelShortestPath;
+import app.impl.SequentialShortestPath;
+import app.impl.MyShortestPathProblem;
+import app.impl.RandomGrid;
 import app.service.ShortestPathProblem;
 
 import java.util.List;
@@ -9,29 +11,33 @@ import java.util.concurrent.ForkJoinPool;
 
 public class Main {
     public static void main(String[] args) {
-        int[][] graph = {
-                {0,1,4,0},
-                {0,0,2,6},
-                {0,0,0,3},
-                {0,0,0,0},
-        };
+        int dimension = 11;
+        RandomGrid g = new RandomGrid(dimension);
 
-        int initialBestPathLength = Integer.MAX_VALUE;
+        ShortestPathProblem problem = new MyShortestPathProblem(g.get(), 0, dimension - 1);
+
+        SequentialShortestPath solution = new SequentialShortestPath(problem);
+        List<Integer> bestPath = solution.findShortestPath();
+
+        int initialBestValue = Integer.MAX_VALUE;
         ForkJoinPool forkJoinPool = new ForkJoinPool();
 
-        int start = 0;
-        int end = 3;
+        ParallelShortestPath parallelSolution = new ParallelShortestPath(problem, initialBestValue);
 
-        ShortestPathProblem problem = new MyShortestPathProblem(graph, start, end);
-        ParallelShortestPath solution = new ParallelShortestPath(problem, initialBestPathLength);
+        List<Integer> bestParallelPath = forkJoinPool.invoke(parallelSolution);
 
-        List<Integer> shortestPath = forkJoinPool.invoke(solution);
-
-        if (shortestPath != null){
-            System.out.println("Camino mas corto: " + shortestPath);
-            System.out.println("Longitud del camino: " + shortestPath.size());
+        if (bestPath != null){
+            System.out.println("Camino mas corto (secuencial): " + bestPath);
+            System.out.println("Longitud del camino: " + bestPath.size());
         } else {
-            System.out.println("No se encontro un camino valido");
+            System.out.println("No se encontró un camino válido");
+        }
+
+        if (bestParallelPath != null){
+            System.out.println("Camino mas corto (paralelo): " + bestParallelPath);
+            System.out.println("Longitud del camino: " + bestParallelPath.size());
+        } else {
+            System.out.println("No se encontró un camino válido");
         }
     }
 }

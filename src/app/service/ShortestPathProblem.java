@@ -1,5 +1,7 @@
 package app.service;
 
+import app.impl.MyShortestPathProblem;
+
 import java.util.List;
 
 public interface ShortestPathProblem {
@@ -9,5 +11,6 @@ public interface ShortestPathProblem {
     List<Integer> getPossibleMoves();
     List<Integer> getCurrentPath();
     int getCurrentPathLength();
+    MyShortestPathProblem copy();
 }
 
