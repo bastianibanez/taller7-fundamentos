@@ -2,108 +2,58 @@ package app.impl;
 
 import app.service.ShortestPathProblem;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class MyShortestPathProblem implements ShortestPathProblem {
-    private int[][] grid;
-    private boolean[][] visited;
-    private int currX, currY;
-    private int startX, startY;
-    private int endX, endY;
-    private List<Integer> currentPath;
+    private final int[][] graph;
+    private final int start;
+    private final int end;
 
-    public MyShortestPathProblem(
-            int[][] grid,
-            int startX, int startY,
-            int endX, int endY
-    )
-    {
-        this.grid = grid;
-        this.visited = new boolean[grid.length][grid[0].length];
-        this.startX = startX;
-        this.startY = startY;
-        this.currX = startX;
-        this.currY = startY;
-        this.endX = endX;
-        this.endY = endY;
-        this.currentPath = new ArrayList<>();
-        this.visited[startX][startY] = true;
+    private int currentLength = 0;
+    private List<Integer> path = new ArrayList<>();
+    private Set<Integer> visited = new HashSet<>();
+
+    public MyShortestPathProblem(int[][] graph, int start, int end){
+        this.graph = graph;
+        this.start = start;
+        this.end = end;
+
+        path.add(start);
+        visited.add(start);
     }
 
     @Override
     public boolean isSolution(){
-        return currX == endX && currY == endY;
+        return path.get(path.size() - 1) == end;
     }
 
     @Override
     public void applyMove(int move){
-        //Moves: 0:Up - 1:Down - 2:Left - 3:Right
-        currentPath.add(move);
-
-        switch (move){
-            case 0:
-                currX--;
-                break;
-            case 1:
-                currX++;
-                break;
-            case 2:
-                currY--;
-                break;
-            case 3:
-                currY++;
-                break;
-        }
-
-        visited[currX][currY] = true;
+        int from = path.get(path.size() - 1);
+        currentLength += graph[from][move];
+        path.add(move);
+        visited.add(move);
     }
 
     @Override
     public void undoMove(int move){
-        //Moves: 0:Up - 1:Down - 2:Left - 3:Right
-
-        visited[currX][currY] = false;
-
-        switch (move){
-            case 0:
-                currX++;
-                break;
-            case 1:
-                currX--;
-                break;
-            case 2:
-                currY++;
-                break;
-            case 3:
-                currY --;
-                break;
-        }
-    }
-
-    public boolean isValidMove(int move){
-       switch (move){
-           case 0:
-               return (currX - 1 >= 0);
-           case 1:
-               return (currX + 1 < grid.length);
-           case 2:
-               return (currY - 1 >= 0);
-           case 3:
-               return (currY + 1 < grid.length);
-           default:
-               return false;
-       }
+        path.remove(path.size() - 1);
+        visited.remove(move);
+        int from = path.get(path.size() - 1);
+        currentLength -= graph[from][move];
     }
 
     @Override
     public List<Integer> getPossibleMoves(){
+        int from = path.get(path.size() - 1);
         List<Integer> moves = new ArrayList<>();
-        //Moves: 0:Up - 1:Down - 2:Left - 3:Right
 
-        for (int i = 0; i < 4; i++){
-            if (isValidMove(i)){
-                moves.add(i);
+        for (int to = 0; to < graph.length; to++){
+            if (graph[from][to] > 0 && !visited.contains(to)){
+                moves.add(to);
             }
         }
         return moves;
@@ -111,12 +61,11 @@ public class MyShortestPathProblem implements ShortestPathProblem {
 
     @Override
     public List<Integer> getCurrentPath(){
-        return new ArrayList<>(currentPath);
+        return path;
     }
 
     @Override
     public int getCurrentPathLength(){
-        return currentPath.size();
+        return path.size();
     }
-
 }
