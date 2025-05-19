@@ -11,14 +11,16 @@ import java.util.concurrent.ForkJoinPool;
 
 public class Main {
     public static void main(String[] args) {
+        //Valores comunes
         int dimension = 11;
         RandomGrid g = new RandomGrid(dimension);
-
         ShortestPathProblem problem = new MyShortestPathProblem(g.get(), 0, dimension - 1);
 
+        //Algoritmo secuencial
         SequentialShortestPath solution = new SequentialShortestPath(problem);
         List<Integer> bestPath = solution.findShortestPath();
 
+        //Algoritmo paralelo
         int initialBestValue = Integer.MAX_VALUE;
         ForkJoinPool forkJoinPool = new ForkJoinPool();
 

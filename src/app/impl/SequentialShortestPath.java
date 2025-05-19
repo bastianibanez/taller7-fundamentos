@@ -2,6 +2,7 @@ package app.impl;
 
 import app.service.ShortestPathProblem;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SequentialShortestPath {
@@ -24,7 +25,7 @@ public class SequentialShortestPath {
         if (problem.isSolution()){
             List<Integer> currentPath = problem.getCurrentPath();
             if (bestPath == null || currentPath.size() < bestPath.size()){
-                bestPath = currentPath;
+                bestPath = new ArrayList<>(currentPath);
                 bestPathLength = currentPath.size();
             }
             return;
