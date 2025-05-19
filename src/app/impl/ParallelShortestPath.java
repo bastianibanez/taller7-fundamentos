@@ -11,7 +11,7 @@ public class ParallelShortestPath extends RecursiveTask<List<Integer>> {
     private int bestPathLength;
 
     public ParallelShortestPath(ShortestPathProblem problem, int bestPathLength){
-        this.problem = problem;
+        this.problem = problem.copy();
         this.bestPathLength = bestPathLength;
     }
 
@@ -27,7 +27,6 @@ public class ParallelShortestPath extends RecursiveTask<List<Integer>> {
 
         for (int move:moves){
             problem.applyMove(move);
-
             if (problem.getCurrentPathLength() < bestPathLength){
                 ParallelShortestPath child = new ParallelShortestPath(problem, bestPathLength);
                 tasks.add(child);

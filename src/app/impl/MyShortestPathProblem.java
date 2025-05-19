@@ -77,4 +77,13 @@ public class MyShortestPathProblem implements ShortestPathProblem {
     public int getCurrentPathLength(){
         return path.size();
     }
+
+    @Override
+    public MyShortestPathProblem copy(){
+        MyShortestPathProblem copy = new MyShortestPathProblem(graph, start, end);
+        copy.path = new ArrayList<>(this.path);
+        copy.visited = new HashSet<>(this.visited);
+        copy.currentLength = this.currentLength;
+        return copy;
+    }
 }
