@@ -4,7 +4,7 @@ import app.service.ShortestPathProblem;
 
 import java.util.List;
 
-public class SequentialShortestPath implements Runnable {
+public class SequentialShortestPath {
     private final ShortestPathProblem problem;
     private int bestPathLength;
     private List<Integer> bestPath;
@@ -43,10 +43,5 @@ public class SequentialShortestPath implements Runnable {
     public static List<Integer> findShortestPath(ShortestPathProblem problem){
         SequentialShortestPath solver = new SequentialShortestPath(problem);
         return solver.findShortestPath();
-    }
-
-    @Override
-    public void run(){
-        solve();
     }
 }
