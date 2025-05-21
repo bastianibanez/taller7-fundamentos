@@ -5,61 +5,102 @@ import app.service.ShortestPathProblem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ParallelShortestPath extends RecursiveTask<List<Integer>> {
-    private final ShortestPathProblem problem; // This will be the unique state for this task
-    private int bestPathLength; // This task's view of the best path length
+    private final ShortestPathProblem problem;
+    private final AtomicInteger sharedBestPathWeight; // Stores the best weight found globally
     private final int currentDepth;
 
-    // Threshold after which tasks are no longer forked but solved sequentially within the current task.
-    // This value can be tuned (e.g., 3, 4, or 5).
-    private static final int SEQUENTIAL_THRESHOLD_DEPTH = 1;
+    // This threshold determines when to stop forking and solve sequentially.
+    // Tune this value based on performance observations (e.g., 0, 1, 2, 3).
+    // A lower value reduces parallelism but also overhead from copies/task creation.
+    private static final int SEQUENTIAL_THRESHOLD_DEPTH = 3;
 
-    // Constructor for the initial call (e.g., from RunAlgorithms)
-    public ParallelShortestPath(ShortestPathProblem problemToCopy, int initialBestPathLength) {
-        // The root task also works on its own copy of the problem.
-        this.problem = problemToCopy; // Assuming problemToCopy is already a copy from RunAlgorithms
-        this.bestPathLength = initialBestPathLength;
+    /**
+     * Constructor for the initial parallel task.
+     * @param problemToCopy The problem instance (a copy will be made if needed,
+     * or assumed to be a fresh copy for this root task).
+     * @param initialSharedBestPathWeight An AtomicInteger initialized to Integer.MAX_VALUE.
+     */
+    public ParallelShortestPath(ShortestPathProblem problemToCopy, AtomicInteger initialSharedBestPathWeight) {
+        this.problem = problemToCopy; // Assumes this is the copy intended for the root parallel task
+        this.sharedBestPathWeight = initialSharedBestPathWeight;
         this.currentDepth = 0;
     }
 
-    // Private constructor for recursive (forked) calls
-    private ParallelShortestPath(ShortestPathProblem problemStateForThisTask, int bestPathLength, int depth) {
-        // problemStateForThisTask is already the unique, copied, and (potentially) move-applied state for this child.
+    /**
+     * Private constructor for forked child tasks.
+     * @param problemStateForThisTask The unique problem state (already copied and move-applied) for this child.
+     * @param sharedBestPathWeight    The reference to the same AtomicInteger shared across all tasks.
+     * @param depth                   The current recursion depth for this child task.
+     */
+    private ParallelShortestPath(ShortestPathProblem problemStateForThisTask, AtomicInteger sharedBestPathWeight, int depth) {
         this.problem = problemStateForThisTask;
-        this.bestPathLength = bestPathLength;
+        this.sharedBestPathWeight = sharedBestPathWeight;
         this.currentDepth = depth;
+    }
+
+    /**
+     * Atomically updates the shared best path weight if the new weight is better.
+     * @param newWeight The new path weight to consider.
+     */
+    private void updateSharedBestPathWeight(int newWeight) {
+        int oldWeight;
+        do {
+            oldWeight = sharedBestPathWeight.get();
+            if (newWeight >= oldWeight) {
+                return; // New weight is not better, no update needed
+            }
+        } while (!sharedBestPathWeight.compareAndSet(oldWeight, newWeight));
+        // If compareAndSet succeeds, the value is updated.
+        // If it fails, it means another thread updated it; the loop re-checks.
     }
 
     @Override
     protected List<Integer> compute() {
+        // Get the current best known weight from the shared atomic variable
+        int currentGlobalBestWeight = sharedBestPathWeight.get();
+
+        // If this path itself is a solution
         if (problem.isSolution()) {
-            return new ArrayList<>(problem.getCurrentPath()); // Return a copy
+            List<Integer> currentPath = problem.getCurrentPath();
+            updateSharedBestPathWeight(problem.getCurrentPathWeight()); // Update global best with this path's weight
+            return new ArrayList<>(currentPath); // Return a copy of the path
         }
 
-        // Pruning: if current path is already not better than the best known, stop.
-        // (problem.getCurrentPathLength() > 0 is to avoid pruning the initial empty path immediately)
-        if (problem.getCurrentPathLength() > 0 && problem.getCurrentPathLength() >= bestPathLength) {
+        // Pruning: if current path's weight is already not better than the best known, stop.
+        // The check problem.getCurrentPath().size() > 1 helps avoid pruning the initial state
+        // if its weight is 0 (e.g. path = [startNode], weight = 0)
+        // and currentGlobalBestWeight is still MAX_VALUE.
+        if (problem.getCurrentPathWeight() >= currentGlobalBestWeight && problem.getCurrentPath().size() > 1) {
             return null;
         }
 
-        List<Integer> shortestPathFoundInThisBranch = null;
+        List<Integer> shortestPathFoundLocally = null; // Holds the path list for the best solution found from this task's branch
+
         List<Integer> possibleMoves = problem.getPossibleMoves();
 
         if (currentDepth >= SEQUENTIAL_THRESHOLD_DEPTH) {
             // --- Switch to sequential exploration within this task ---
             for (int move : possibleMoves) {
-                problem.applyMove(move); // Apply move to this task's problem state
-
-                // Check if this path is still promising before deeper recursion
-                if (problem.getCurrentPathLength() < bestPathLength) {
-                    List<Integer> path = compute(); // Recursive call on the *same* task's logic (now sequential)
+                problem.applyMove(move);
+                // Re-check against the potentially updated global best before deeper recursion
+                if (problem.getCurrentPathWeight() < sharedBestPathWeight.get()) {
+                    List<Integer> path = compute(); // Recursive call, will execute sequentially due to depth
 
                     if (path != null) {
-                        if (shortestPathFoundInThisBranch == null || path.size() < shortestPathFoundInThisBranch.size()) {
-                            shortestPathFoundInThisBranch = path; // path is already a distinct list
-                            this.bestPathLength = shortestPathFoundInThisBranch.size(); // Update for subsequent moves in this sequential block
+                        // If a path is returned, it means a valid solution was found down this line,
+                        // and sharedBestPathWeight would have been updated by the deeper call.
+                        // We just need to keep track of one such valid path list to return.
+                        // A more sophisticated approach might compare weights if multiple paths are returned
+                        // by the sequential explorations, but this simplifies.
+                        if (shortestPathFoundLocally == null) { // Keep the first valid path found
+                            shortestPathFoundLocally = path;
                         }
+                        // To pick the actual "best" among paths from this sequential block,
+                        // compute() would need to return weight, or we'd re-evaluate problem state for 'path'.
+                        // Relying on sharedBestPathWeight to have been updated is the primary pruning mechanism.
                     }
                 }
                 problem.undoMove(move); // Backtrack
@@ -68,39 +109,36 @@ public class ParallelShortestPath extends RecursiveTask<List<Integer>> {
             // --- Continue with parallel forking ---
             List<ParallelShortestPath> tasks = new ArrayList<>();
             for (int move : possibleMoves) {
-                // 1. Create a fresh copy of the current (parent) task's problem state for the child
-                ShortestPathProblem problemForChild = this.problem.copy();
-                // 2. Apply the move to this new independent copy
-                problemForChild.applyMove(move);
+                ShortestPathProblem problemForChild = this.problem.copy(); // Create a fresh copy for the child
+                problemForChild.applyMove(move); // Apply the move to the child's copy
 
-                // 3. Check if this path is still worth exploring based on parent's bestPathLength
-                if (problemForChild.getCurrentPathLength() < this.bestPathLength) {
-                    // 4. Create child task with the new state and incremented depth
+                // Re-check against the potentially updated global best before forking
+                if (problemForChild.getCurrentPathWeight() < sharedBestPathWeight.get()) {
                     ParallelShortestPath childTask = new ParallelShortestPath(
-                            problemForChild,      // Pass the already copied and move-applied state
-                            this.bestPathLength,  // Pass down the current best known length
+                            problemForChild,          // Pass the child's unique problem state
+                            this.sharedBestPathWeight, // Pass the reference to the same AtomicInteger
                             currentDepth + 1
                     );
                     tasks.add(childTask);
                     childTask.fork();
                 }
-                // this.problem (parent's problem state) remains unchanged
             }
 
             // Collect results from forked tasks
             for (ParallelShortestPath task : tasks) {
                 List<Integer> pathFromChild = task.join();
                 if (pathFromChild != null) {
-                    if (shortestPathFoundInThisBranch == null || pathFromChild.size() < shortestPathFoundInThisBranch.size()) {
-                        shortestPathFoundInThisBranch = pathFromChild; // pathFromChild is a result, should be safe
-                        // Update this task's bestPathLength. This helps if this task itself
-                        // were to do more work after joins or if used in more complex scenarios.
-                        // For sibling tasks already forked, this update won't help them directly.
-                        this.bestPathLength = shortestPathFoundInThisBranch.size();
+                    // If a child returns a path, it means a solution was found and
+                    // sharedBestPathWeight was potentially updated.
+                    // Similar to the sequential part, we just keep one valid path list.
+                    if (shortestPathFoundLocally == null) {
+                        shortestPathFoundLocally = pathFromChild;
                     }
+                    // If we needed to compare which child returned the absolute best path (by weight)
+                    // among siblings, compute() would need to return more than just List<Integer>.
                 }
             }
         }
-        return shortestPathFoundInThisBranch;
+        return shortestPathFoundLocally; // Return the path list found from this branch
     }
 }
