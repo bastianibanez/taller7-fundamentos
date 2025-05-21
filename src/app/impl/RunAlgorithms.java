@@ -10,7 +10,7 @@ public class RunAlgorithms {
         //Valores comunes
         RandomGrid g = new RandomGrid(dimension);
         System.out.println(dimension);
-        g.showGrid(); // Consider commenting out for performance runs with many iterations
+        // g.showGrid(); // Consider commenting out for performance runs with many iterations
         ShortestPathProblem problem = new MyShortestPathProblem(g.get(), 0, dimension - 1);
 
         //Algoritmo secuencial
