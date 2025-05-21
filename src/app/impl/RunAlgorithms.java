@@ -43,7 +43,7 @@ public class RunAlgorithms {
             System.out.println("Camino mas corto (secuencial): " + bestPath);
             System.out.println("Longitud del camino: " + bestPath.size());
             System.out.println("Tiempo: " + time_secuencial_ms + "ms");
-            System.out.println("Tiempo: " + time_secuencial_nano + "ms");
+            System.out.println("Tiempo: " + time_secuencial_nano + "ns");
         } else {
             System.out.println("No se encontró un camino válido (secuencial)");
         }
@@ -52,7 +52,7 @@ public class RunAlgorithms {
             System.out.println("Camino mas corto (paralelo): " + bestParallelPath);
             System.out.println("Longitud del camino: " + bestParallelPath.size());
             System.out.println("Tiempo: " + time_paralelo_ms + "ms");
-            System.out.println("Tiempo: " + time_paralelo_nano + "ms");
+            System.out.println("Tiempo: " + time_paralelo_nano + "ns");
         } else {
             System.out.println("No se encontró un camino válido (paralelo)");
         }
