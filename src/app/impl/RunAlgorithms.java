@@ -10,62 +10,61 @@ public class RunAlgorithms {
         //Valores comunes
         RandomGrid g = new RandomGrid(dimension);
         System.out.println(dimension);
-        g.showGrid();
+        g.showGrid(); // Consider commenting out for performance runs with many iterations
         ShortestPathProblem problem = new MyShortestPathProblem(g.get(), 0, dimension - 1);
 
         //Algoritmo secuencial
-        long start_secuencial = System.nanoTime();
         long start_secuencial_ms = System.currentTimeMillis();
-        SequentialShortestPath solution = new SequentialShortestPath(problem);
+        long start_secuencial_nano = System.nanoTime();
+        // Operate on a copy of the problem
+        SequentialShortestPath solution = new SequentialShortestPath(problem.copy());
         List<Integer> bestPath = solution.findShortestPath();
-        long end_secuencial = System.nanoTime();
         long end_secuencial_ms = System.currentTimeMillis();
+        long end_secuencial_nano = System.nanoTime();
 
         //Algoritmo paralelo
-        long start_paralelo = System.nanoTime();
         long start_paralelo_ms = System.currentTimeMillis();
+        long start_paralelo_nano = System.nanoTime();
         int initialBestValue = Integer.MAX_VALUE;
         ForkJoinPool forkJoinPool = new ForkJoinPool();
 
-        ParallelShortestPath parallelSolution = new ParallelShortestPath(problem, initialBestValue);
+        // Operate on a copy of the problem for the root parallel task
+        ParallelShortestPath parallelSolution = new ParallelShortestPath(problem.copy(), initialBestValue);
         List<Integer> bestParallelPath = forkJoinPool.invoke(parallelSolution);
-        long end_paralelo = System.nanoTime();
         long end_paralelo_ms = System.currentTimeMillis();
-
-        // deltaTiempo en nanosegundos
-        long time_secuencial = end_secuencial - start_secuencial;
-        long time_paralelo = end_paralelo - start_paralelo;
+        long end_paralelo_nano = System.nanoTime();
 
         long time_secuencial_ms = end_secuencial_ms - start_secuencial_ms;
+        long time_secuencial_nano = end_secuencial_nano - start_secuencial_nano;
         long time_paralelo_ms = end_paralelo_ms - start_paralelo_ms;
+        long time_paralelo_nano = end_paralelo_nano - start_paralelo_nano;
 
         if (bestPath != null) {
             System.out.println("Camino mas corto (secuencial): " + bestPath);
             System.out.println("Longitud del camino: " + bestPath.size());
-            System.out.println("Tiempo: " + time_secuencial_ms + "ms (" + time_secuencial + "ns)");
+            System.out.println("Tiempo: " + time_secuencial_ms + "ms");
+            System.out.println("Tiempo: " + time_secuencial_nano + "ms");
         } else {
-            System.out.println("No se encontró un camino válido");
+            System.out.println("No se encontró un camino válido (secuencial)");
         }
 
         if (bestParallelPath != null) {
             System.out.println("Camino mas corto (paralelo): " + bestParallelPath);
             System.out.println("Longitud del camino: " + bestParallelPath.size());
-            System.out.println("Tiempo: " + time_paralelo_ms + "ms (" + time_paralelo + "ns)");
+            System.out.println("Tiempo: " + time_paralelo_ms + "ms");
+            System.out.println("Tiempo: " + time_paralelo_nano + "ms");
         } else {
-            System.out.println("No se encontró un camino válido");
+            System.out.println("No se encontró un camino válido (paralelo)");
         }
 
-        if (time_paralelo > time_secuencial){
-            long time_ratio  = ((time_paralelo/time_secuencial) - 1) * 100;
-            System.out.println("Tiempo paralelo (+" + time_ratio + ")%");
-            System.out.println();
-        }
+        // Comparing execution times
+        if (bestPath != null && bestParallelPath != null) { // Only compare if both found paths
+            if (time_paralelo_nano > 0 && time_secuencial_nano > 0) { // Avoid division by zero
+                double rendimiento = (double)time_secuencial_nano/time_paralelo_nano;
+                System.out.println("Rendimiento paralelo: x" + rendimiento);
 
-        if (time_paralelo < time_secuencial){
-            long time_ratio  = ((time_secuencial/time_paralelo) - 1) * 100;
-            System.out.println("Tiempo paralelo (-" + time_ratio + ")%");
-            System.out.println();
-        }
-
+                }
+            }
+        System.out.println();
     }
 }
