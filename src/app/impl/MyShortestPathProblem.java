@@ -61,24 +61,21 @@ public class MyShortestPathProblem implements ShortestPathProblem {
             return;
         }
 
-        int to = path.getLast(); // node being removed
+        int to = path.getLast();
         path.removeLast();
         visited.remove(to);
 
-        if (!path.isEmpty()) { // Ensure path is not empty before getting last element
-            int from = path.getLast(); // new last node
-            currentLength -= graph[from][to]; // Subtract weight of the removed edge
+        if (!path.isEmpty()) {
+            int from = path.getLast();
+            currentLength -= graph[from][to];
         } else {
-            // This case implies undoing the very first move from a single start node,
-            // which shouldn't happen if applyMove requires a non-empty path.
-            // Or, if the path becomes empty, currentLength should be 0.
             currentLength = 0;
         }
     }
 
     @Override
     public List<Integer> getPossibleMoves() {
-        if (path.isEmpty()) return new ArrayList<>(); // No moves if path is empty
+        if (path.isEmpty()) return new ArrayList<>();
 
         int from = path.getLast();
         List<Integer> moves = new ArrayList<>();
@@ -98,12 +95,12 @@ public class MyShortestPathProblem implements ShortestPathProblem {
 
     @Override
     public int getCurrentPathLength() {
-        return path.size(); // Returns number of nodes
+        return path.size();
     }
 
     @Override
     public int getCurrentPathWeight() {
-        return currentLength; // New: Returns sum of weights
+        return currentLength;
     }
 
     @Override

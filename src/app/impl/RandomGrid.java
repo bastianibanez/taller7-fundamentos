@@ -1,8 +1,5 @@
 package app.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class RandomGrid {
     private int[][] grid;
     private int dimension;
