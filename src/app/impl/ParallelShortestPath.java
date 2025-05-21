@@ -13,7 +13,7 @@ public class ParallelShortestPath extends RecursiveTask<List<Integer>> {
 
     // Threshold after which tasks are no longer forked but solved sequentially within the current task.
     // This value can be tuned (e.g., 3, 4, or 5).
-    private static final int SEQUENTIAL_THRESHOLD_DEPTH = 4;
+    private static final int SEQUENTIAL_THRESHOLD_DEPTH = 1;
 
     // Constructor for the initial call (e.g., from RunAlgorithms)
     public ParallelShortestPath(ShortestPathProblem problemToCopy, int initialBestPathLength) {

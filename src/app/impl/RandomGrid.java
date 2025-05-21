@@ -12,7 +12,7 @@ public class RandomGrid {
         this.grid = new int[dimension][dimension];
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                this.grid[i][j] = (int) (Math.random() * 5);
+                this.grid[i][j] = (int) (Math.random() * 4);
             }
         }
     }
