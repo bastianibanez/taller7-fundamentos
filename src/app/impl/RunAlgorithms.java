@@ -36,7 +36,7 @@ public class RunAlgorithms {
         long time_secuencial = end_secuencial - start_secuencial;
         long time_paralelo = end_paralelo - start_paralelo;
 
-        long time_secuencial_ms = end_secuencial_ms - start_paralelo_ms;
+        long time_secuencial_ms = end_secuencial_ms - start_secuencial_ms;
         long time_paralelo_ms = end_paralelo_ms - start_paralelo_ms;
 
         if (bestPath != null) {
