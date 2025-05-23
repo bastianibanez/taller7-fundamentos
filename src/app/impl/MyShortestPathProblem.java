@@ -12,11 +12,10 @@ public class MyShortestPathProblem implements ShortestPathProblem {
     private final int start;
     private final int end;
 
-    private int currentLength = 0; // This correctly stores the sum of weights
+    private int currentLength = 0;
     private List<Integer> path = new ArrayList<>();
     private Set<Integer> visited = new HashSet<>();
 
-    // Existing private constructor for copy optimization (if you added it)
     private MyShortestPathProblem(int[][] graph, int startNode, int endNode, boolean initializeCollections) {
         this.graph = graph;
         this.start = startNode;
@@ -45,40 +44,37 @@ public class MyShortestPathProblem implements ShortestPathProblem {
 
     @Override
     public void applyMove(int move) {
-        if (path.isEmpty()) { // Should not happen if start node is added in constructor
+        if (path.isEmpty()) {
             return;
         }
 
         int from = path.getLast();
-        currentLength += graph[from][move]; // currentLength accumulates weights
+        currentLength += graph[from][move];
         path.add(move);
         visited.add(move);
     }
 
     @Override
     public void undoMove(int move) {
-        if (path.size() <= 1) { // Path should at least contain the start node
+        if (path.size() <= 1) {
             return;
         }
 
-        int to = path.getLast(); // node being removed
+        int to = path.getLast();
         path.removeLast();
         visited.remove(to);
 
-        if (!path.isEmpty()) { // Ensure path is not empty before getting last element
-            int from = path.getLast(); // new last node
-            currentLength -= graph[from][to]; // Subtract weight of the removed edge
+        if (!path.isEmpty()) {
+            int from = path.getLast();
+            currentLength -= graph[from][to];
         } else {
-            // This case implies undoing the very first move from a single start node,
-            // which shouldn't happen if applyMove requires a non-empty path.
-            // Or, if the path becomes empty, currentLength should be 0.
             currentLength = 0;
         }
     }
 
     @Override
     public List<Integer> getPossibleMoves() {
-        if (path.isEmpty()) return new ArrayList<>(); // No moves if path is empty
+        if (path.isEmpty()) return new ArrayList<>();
 
         int from = path.getLast();
         List<Integer> moves = new ArrayList<>();
@@ -98,12 +94,12 @@ public class MyShortestPathProblem implements ShortestPathProblem {
 
     @Override
     public int getCurrentPathLength() {
-        return path.size(); // Returns number of nodes
+        return path.size();
     }
 
     @Override
     public int getCurrentPathWeight() {
-        return currentLength; // New: Returns sum of weights
+        return currentLength;
     }
 
     @Override

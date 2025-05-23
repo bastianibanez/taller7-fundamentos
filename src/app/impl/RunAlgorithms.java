@@ -8,27 +8,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RunAlgorithms {
 
-    // Constructor now takes a single 'dimension' which represents the total number of nodes
-    // for the original RandomGrid behavior.
     public RunAlgorithms(int dimension) {
-        // This 'dimension' is the number of nodes for RandomGrid
-        RandomGrid g = new RandomGrid(dimension); // Calls the existing RandomGrid(int dimension) constructor
+        RandomGrid g = new RandomGrid(dimension);
         System.out.println("Graph: " + dimension + " nodes");
-        // g.showGrid(); // Uncomment if you want to see the grid matrix
 
-        // The problem is defined for 'dimension' nodes, from node 0 to node 'dimension - 1'
         ShortestPathProblem problem = new MyShortestPathProblem(g.get(), 0, dimension - 1);
-        runAndPrint(problem, dimension); // Pass dimension for context if needed in runAndPrint
+        runAndPrint(problem, dimension);
     }
-
-    // Overloaded constructor for potential future 2D grid use, kept for reference
-    // public RunAlgorithms(int rows, int cols) {
-    // RandomGrid g = new RandomGrid(rows, cols); // This would require the updated RandomGrid
-    // System.out.println("Grid: " + rows + "x" + cols + " (" + g.getTotalNodes() + " nodes)");
-    // ShortestPathProblem problem = new MyShortestPathProblem(g.get(), 0, g.getTotalNodes() - 1);
-    // runAndPrint(problem);
-    // }
-
 
     private void runAndPrint(ShortestPathProblem problemInstance, int problemSizeContext) {
         // Algoritmo secuencial

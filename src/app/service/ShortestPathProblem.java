@@ -10,7 +10,7 @@ public interface ShortestPathProblem {
     void undoMove(int move);
     List<Integer> getPossibleMoves();
     List<Integer> getCurrentPath();
-    int getCurrentPathLength(); // Returns number of nodes in path
-    int getCurrentPathWeight(); // New: Returns sum of weights of the path
+    int getCurrentPathLength();
+    int getCurrentPathWeight();
     MyShortestPathProblem copy();
 }
