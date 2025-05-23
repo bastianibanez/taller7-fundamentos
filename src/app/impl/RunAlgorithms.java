@@ -1,88 +1,83 @@
 package app.impl;
 
-import app.service.ShortestPathProblem; // Asumiendo que ya está
+import app.service.ShortestPathProblem;
 
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference; // Importado
+import java.util.concurrent.atomic.AtomicReference;
 
 public class RunAlgorithms {
 
     public RunAlgorithms(int dimension) {
-        RandomGrid g = new RandomGrid(dimension); //
-        System.out.println("Graph: " + dimension + " nodes"); //
+        RandomGrid g = new RandomGrid(dimension);
+        System.out.println("Graph: " + dimension + " nodes");
 
-        ShortestPathProblem problem = new MyShortestPathProblem(g.get(), 0, dimension - 1); //
-        runAndPrint(problem, dimension); //
+        ShortestPathProblem problem = new MyShortestPathProblem(g.get(), 0, dimension - 1);
+        runAndPrint(problem, dimension);
     }
 
     private void runAndPrint(ShortestPathProblem problemInstance, int problemSizeContext) {
-        // Algoritmo secuencial
-        long start_secuencial_ms = System.currentTimeMillis(); //
-        SequentialShortestPath solution = new SequentialShortestPath(problemInstance.copy()); //
-        List<Integer> bestPathSequential = solution.findShortestPath(); //
-        int bestWeightSequential = solution.getBestPathWeight(); //
-        long end_secuencial_ms = System.currentTimeMillis(); //
+        long start_secuencial_ms = System.currentTimeMillis();
+        SequentialShortestPath solution = new SequentialShortestPath(problemInstance.copy());
+        List<Integer> bestPathSequential = solution.findShortestPath();
+        int bestWeightSequential = solution.getBestPathWeight();
+        long end_secuencial_ms = System.currentTimeMillis();
+        AtomicInteger sharedBestParallelPathWeight = new AtomicInteger(Integer.MAX_VALUE);
 
-        // Algoritmo paralelo
-        long start_paralelo_ms = System.currentTimeMillis(); //
-        AtomicInteger sharedBestParallelPathWeight = new AtomicInteger(Integer.MAX_VALUE); //
-        AtomicReference<List<Integer>> sharedBestParallelPath = new AtomicReference<>(null); // AÑADIDO
-        ForkJoinPool forkJoinPool = new ForkJoinPool(); //
+        long start_paralelo_ms = System.currentTimeMillis();
+        AtomicReference<List<Integer>> sharedBestParallelPath = new AtomicReference<>(null);
+        ForkJoinPool forkJoinPool = new ForkJoinPool();
 
-        // AÑADIDO sharedBestParallelPath al constructor
         ParallelShortestPath parallelSolution = new ParallelShortestPath(
                 problemInstance.copy(),
                 sharedBestParallelPathWeight,
                 sharedBestParallelPath
         );
-        forkJoinPool.invoke(parallelSolution); // Ahora retorna Void, la ejecución actualiza las referencias compartidas
+        forkJoinPool.invoke(parallelSolution);
 
-        // Leer los resultados directamente de las variables atómicas compartidas
         List<Integer> bestPathParallel = sharedBestParallelPath.get();
-        int bestWeightParallel = sharedBestParallelPathWeight.get(); //
-        long end_paralelo_ms = System.currentTimeMillis(); //
+        int bestWeightParallel = sharedBestParallelPathWeight.get();
+        long end_paralelo_ms = System.currentTimeMillis();
 
-        long time_secuencial_ms = end_secuencial_ms - start_secuencial_ms; //
-        long time_paralelo_ms = end_paralelo_ms - start_paralelo_ms; //
+        long time_secuencial_ms = end_secuencial_ms - start_secuencial_ms;
+        long time_paralelo_ms = end_paralelo_ms - start_paralelo_ms;
 
         if (bestPathSequential != null) {
-            System.out.println("Camino mas corto (secuencial): " + bestPathSequential); //
-            System.out.println("Costo del camino (secuencial): " + bestWeightSequential); //
-            System.out.println("Nodos en el camino (secuencial): " + bestPathSequential.size()); //
-            System.out.println("Tiempo: " + time_secuencial_ms + "ms"); //
+            System.out.println("Camino mas corto (secuencial): " + bestPathSequential);
+            System.out.println("Costo del camino (secuencial): " + bestWeightSequential);
+            System.out.println("Nodos en el camino (secuencial): " + bestPathSequential.size());
+            System.out.println("Tiempo: " + time_secuencial_ms + "ms");
         } else {
-            System.out.println("No se encontró un camino válido (secuencial)"); //
+            System.out.println("No se encontró un camino válido (secuencial)");
         }
 
-        if (bestPathParallel != null) { // Si se encontró un camino
-            System.out.println("Camino mas corto (paralelo): " + bestPathParallel); //
-            System.out.println("Costo del camino (paralelo): " + bestWeightParallel); //
-            System.out.println("Nodos en el camino (paralelo): " + bestPathParallel.size()); //
-            System.out.println("Tiempo: " + time_paralelo_ms + "ms"); //
+        if (bestPathParallel != null) {
+            System.out.println("Camino mas corto (paralelo): " + bestPathParallel);
+            System.out.println("Costo del camino (paralelo): " + bestWeightParallel);
+            System.out.println("Nodos en el camino (paralelo): " + bestPathParallel.size());
+            System.out.println("Tiempo: " + time_paralelo_ms + "ms");
         } else {
-            // Si no hay camino, verificar si se encontró un peso (lo cual sería inconsistente si bestPathParallel es null)
-            if (bestWeightParallel < Integer.MAX_VALUE) { //
+            if (bestWeightParallel < Integer.MAX_VALUE) {
                 System.out.println("Se encontró un costo (paralelo): " + bestWeightParallel + ", pero no se pudo determinar la lista del camino (error interno o sin camino)."); //
             } else {
-                System.out.println("No se encontró un camino válido (paralelo)"); //
+                System.out.println("No se encontró un camino válido (paralelo)");
             }
         }
 
-        if (bestPathSequential != null && bestPathParallel != null) { // Modificado para chequear ambos caminos
-            if (time_paralelo_ms > 0 && time_secuencial_ms > 0) { //
-                if (time_paralelo_ms > time_secuencial_ms) { //
-                    double ratio = ((double) time_paralelo_ms / time_secuencial_ms - 1) * 100; //
-                    System.out.printf("Tiempo paralelo (+%.2f)%%\n", ratio); //
-                } else if (time_paralelo_ms < time_secuencial_ms) { //
-                    double ratio = ((double) time_secuencial_ms / time_paralelo_ms - 1) * 100; //
-                    System.out.printf("Tiempo paralelo (-%.2f)%%\n", ratio); //
+        if (bestPathSequential != null && bestPathParallel != null) {
+            if (time_paralelo_ms > 0 && time_secuencial_ms > 0) {
+                if (time_paralelo_ms > time_secuencial_ms) {
+                    double ratio = ((double) time_paralelo_ms / time_secuencial_ms - 1) * 100;
+                    System.out.printf("Tiempo paralelo (+%.2f)%%\n", ratio);
+                } else if (time_paralelo_ms < time_secuencial_ms) {
+                    double ratio = ((double) time_secuencial_ms / time_paralelo_ms - 1) * 100;
+                    System.out.printf("Tiempo paralelo (-%.2f)%%\n", ratio);
                 } else {
-                    System.out.println("Tiempo paralelo y secuencial son iguales."); //
+                    System.out.println("Tiempo paralelo y secuencial son iguales.");
                 }
             }
         }
-        System.out.println(); //
+        System.out.println();
     }
 }
